@@ -1,41 +1,41 @@
 /////////////////
-//// MAIN
+//// MAIN PROGRAM
 /////////////////
 
 private
-    int opcion;
+    int option;
 
 begin
-    // cargar_recursos();
-	// configurar_juego();
+    // load_resources();
+	// config_game();
 	
     repeat
-	    opcion = menu_principal();
+	    option = main_menu();
 		
-		switch (opcion)
+		switch (option)
 		    case 1:
-			    // jugar();
+			    // scene_select();
 			end
 			
 			case 2:
-			    // menu_opciones();
+			    // options_menu();
 			end
 		end
-	until (opcion < 1 || opcion > 2);
+	until (option < 1 || option > 2);
 end
 
 /////////////////
-//// MENU PRINCIPAL
+//// MAIN MENU
 /////////////////
 
-function menu_principal()
+function main_menu()
 begin
-    // pintar_menu_principal();
+    // draw_main_menu();
     timer[0] = 0;
 	
 	loop
 	    if (timer[0] > 1000)
-		    creditos();
+		    credits();
 		end
 		
 		if (key(_esc))
@@ -49,14 +49,15 @@ begin
 		if(key(_2))
 		   return (2);
 		end
+		
 	    frame;
 	end
 end
 
 /////////////////
-//// CREDITOS
+//// CREDITS
 /////////////////
 
-function creditos()
+function credits()
 begin
 end
