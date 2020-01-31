@@ -1,0 +1,62 @@
+/////////////////
+//// MAIN
+/////////////////
+
+private
+    int opcion;
+
+begin
+    // cargar_recursos();
+	// configurar_juego();
+	
+    repeat
+	    opcion = menu_principal();
+		
+		switch (opcion)
+		    case 1:
+			    // jugar();
+			end
+			
+			case 2:
+			    // menu_opciones();
+			end
+		end
+	until (opcion < 1 || opcion > 2);
+end
+
+/////////////////
+//// MENU PRINCIPAL
+/////////////////
+
+function menu_principal()
+begin
+    // pintar_menu_principal();
+    timer[0] = 0;
+	
+	loop
+	    if (timer[0] > 1000)
+		    creditos();
+		end
+		
+		if (key(_esc))
+		   return (-1);
+		end
+		
+		if (key(_1))
+		   return (1);
+		end
+		
+		if(key(_2))
+		   return (2);
+		end
+	    frame;
+	end
+end
+
+/////////////////
+//// CREDITOS
+/////////////////
+
+function creditos()
+begin
+end
