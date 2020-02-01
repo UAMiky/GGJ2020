@@ -86,9 +86,13 @@ global
         struct goals[3]       // Level goals: use tool over tile
             byte tile_x;
             byte tile_y;
-            byte tool = BLOCK_EMPTY;
+            byte tool = 0;
         end
     end
+
+    // For UI
+    int id_selected = 0;
+    int level_file_handle = 0;
 
 //// LOCAL
 
@@ -103,7 +107,10 @@ begin
     made_with_div2_intro();
     // load_resources();
     config_game();
-    screen_mockap();
+    // screen_mockap();
+    play_game();
+
+    return;
 
     repeat
         option = main_menu();
@@ -308,8 +315,12 @@ end
 //// PLAYER
 /////////////////
 
-process player(int x, int y)
+process player()
 begin
+    x = g_level_data.start.tile_x * TILE_SIZE + (TILE_SIZE / 2);
+    y = (g_level_data.start.tile_y + 1) * TILE_SIZE + (TILE_SIZE / 2);
+    angle = 90000 * g_level_data.start.rot;
+
     while (waiting_for_exec() != 0)
         player_anim(id, BLOCK_SLEEP_MODE);
         frame;
@@ -420,13 +431,13 @@ begin
 
         // Execute current block
         switch (block)
-            case BLOCK_MOVE_FORWARD:      player_advance(id_player, +1);    end
-            case BLOCK_MOVE_BACKWARDS:    player_advance(id_player, -1);    end
-            case BLOCK_TURN_LEFT:         player_rotate(id_player, -90);    end
-            case BLOCK_TURN_RIGHT:        player_rotate(id_player, +90);    end
-            case BLOCK_TOOL_EXTINGUISHER: use_extinguisher(id_player);      end
-            case BLOCK_TOOL_TORCH:        use_torch(id_player);             end
-            case BLOCK_TOOL_WRENCH:       use_wrench(id_player);            end
+            case BLOCK_MOVE_FORWARD:      player_advance(id_player, +1); end
+            case BLOCK_MOVE_BACKWARDS:    player_advance(id_player, -1); end
+            case BLOCK_TURN_LEFT:         player_rotate(id_player, -90); end
+            case BLOCK_TURN_RIGHT:        player_rotate(id_player, +90); end
+            case BLOCK_TOOL_EXTINGUISHER: use_extinguisher(id_player);   end
+            case BLOCK_TOOL_TORCH:        use_torch(id_player);          end
+            case BLOCK_TOOL_WRENCH:       use_wrench(id_player);         end
         end
 
         idx++;
@@ -454,4 +465,51 @@ end
 function waiting_for_exec()
 begin
     return (timer[1] < 1000); //g_current_level.decission_time);
+end
+
+/////////////////
+//// GAME LOGIC
+/////////////////
+
+process play_game()
+private
+    int f;
+    int level;
+begin
+    f = fopen("LEVELS.DAT", "r+");
+
+    from level = 1 to 10;
+        load_level(f);
+        play_level();
+    end
+
+    fclose(f);
+end
+
+function play_level()
+private
+    id_player;
+begin
+    timer[1] = 0;
+    player();
+    ui_control();
+
+    while (get_id(type player))
+        frame;
+    end
+end
+
+function load_level(f)
+begin
+    if (fread(offset g_level_data, sizeof(g_level_data), f) == 0)
+        fwrite(offset g_level_data, sizeof(g_level_data), f);
+    end
+
+    if (fread(offset g_current_program, sizeof(g_current_program), f))
+        fwrite(offset g_current_program, sizeof(g_current_program), f);
+    end
+end
+
+process ui_control()
+begin
 end
