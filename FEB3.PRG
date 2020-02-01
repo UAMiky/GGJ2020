@@ -17,9 +17,9 @@
  *
  */
 
-PROGRAM FEB3;
+program FEB3;
 
-CONST
+const
     // Special blocks
     BLOCK_EMPTY             = 0;   // empty slot
     BLOCK_END               = -1;  // end of program
@@ -49,14 +49,14 @@ CONST
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
 
-GLOBAL
+global
 
     // Program content
     struct g_current_program
         // Program content (two levels of indentation)
         int blocks[9,1];
-		
-		int current_index = 0;
+
+        int current_index = 0;
 
         // If there is an ongoing repeat
         struct current_repeat
@@ -130,4 +130,20 @@ end
 
 function credits()
 begin
+
+end
+
+/////////////////
+//// HELPER TOOLS
+/////////////////
+function clamp(value, min, max)
+begin
+    if (value < min) return (min);
+    if (value > max) return (max);
+    return (value);
+end
+
+function lerp(a, b, t)
+begin
+    return (a * t + b * (1 - t));
 end
