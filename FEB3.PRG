@@ -48,6 +48,7 @@ const
     BLOCK_REPEAT_9          = 29;  // Repeat x9
 
     MOUSE_ICON              = 99;
+    SELECT_ICON             = 100;
 
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
@@ -159,6 +160,7 @@ end
 /////////////////
 function load_resources()
 begin
+    load_fpg("PROJECTS\FEB3\PLAYER.FPG");
     file_ui = load_fpg("PROJECTS\FEB3\UI_BLOCK.FPG");
 end
 
@@ -232,6 +234,11 @@ end
 function lerp(a, b, t)
 begin
     return ((a * t + b * (100 - t)) / 100);
+end
+
+process simple_sprite(x,y,z,file,graph)
+begin
+    loop frame; end
 end
 
 //////////////////
@@ -543,9 +550,13 @@ private
     int tmp, id_col, mouse_down = false;
     int joy_speed_x = 0;
     int joy_speed_y = 0;
+    int id_selector;
 begin
     file = file_ui;
     graph = MOUSE_ICON;
+    z = -256;
+
+    id_selector = simple_sprite(0,0,-100,file,0);
 
     // spawn program blocks
     for (x = 0; x < MAX_PROGRAM_BLOCKS; x++)
@@ -590,6 +601,9 @@ begin
                     if (id_selected == 0)
                         // Select this if no one selected
                         id_selected = id_col;
+                        id_selector.graph = SELECT_ICON;
+                        id_selector.x = id_col.x;
+                        id_selector.y = id_col.y;
                     else
                         // Otherwise, swap graphs ...
                         tmp = id_selected.graph;
@@ -597,6 +611,7 @@ begin
                         id_col.graph = tmp;
                         // and deselect
                         id_selected = 0;
+                        id_selector.graph = 0;
                     end
                 end
             end
@@ -612,8 +627,8 @@ end
 
 process ui_block(row, column, graph)
 begin
-    x = (column * TILE_SIZE) + UI_OFFSET_X;
-    y = (row * TILE_SIZE) + UI_OFFSET_Y;
+    x = (column * TILE_SIZE) + UI_OFFSET_X + (TILE_SIZE / 2);
+    y = (row * TILE_SIZE) + UI_OFFSET_Y + (TILE_SIZE / 2);
     file = file_ui;
 
     loop
