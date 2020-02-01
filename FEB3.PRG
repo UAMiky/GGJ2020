@@ -22,7 +22,7 @@ program FEB3;
 const
     // Special blocks
     BLOCK_EMPTY             = 0;   // empty slot
-    BLOCK_END               = -1;  // end of program
+    BLOCK_END               = 255; // end of program
 
     // Movement blocks
     BLOCK_SLEEP_MODE        = 1;   // enter sleep mode
@@ -211,13 +211,13 @@ end
 
 process player(int x, int y)
 begin
-    while(waiting_for_exec())
+    while (waiting_for_exec() != 0)
         player_anim(id, BLOCK_SLEEP_MODE);
         frame;
     end
 
     program_executor(id);
-    while(is_program_running())
+    while(is_program_running() != 0)
         player_anim(id, g_current_program.current_block);
         frame;
     end
@@ -329,6 +329,9 @@ begin
             case BLOCK_TOOL_TORCH:        use_torch(id_player);             end
             case BLOCK_TOOL_WRENCH:       use_wrench(id_player);            end
         end
+
+        idx++;
+        block = set_current_block(idx);
     end
 end
 
@@ -351,5 +354,5 @@ end
 
 function waiting_for_exec()
 begin
-    return (timer[1] < 10000); //g_current_level.decission_time);
+    return (timer[1] < 1000); //g_current_level.decission_time);
 end
