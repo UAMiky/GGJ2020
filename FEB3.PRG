@@ -103,6 +103,7 @@ begin
     made_with_div2_intro();
     // load_resources();
     config_game();
+    screen_mockap();
 
     repeat
         option = main_menu();
@@ -149,8 +150,8 @@ private
 begin
     load_pal("DIV2.PAL");
     set_mode(m640x480);
-    map = new_map(320, 200, 0, 0, 15);
-    put(0, map, 0, 0);
+    //map = new_map(320, 200, 0, 0, 15);
+    //put(0, map, 0, 0);
     frame;
 end
 
@@ -217,9 +218,90 @@ end
 //////////////////
 //// SCREEN MOCKAP
 //////////////////
-process screen_mockap()
-begin
+function screen_mockap()
+private
+    struct ite
+        int x, y;
+    end
+    flag = true;
+    int width = 32;
+    int border_x = 16;
+    int border_y = 48;
+    int cells = 13;
+    int rows = 13;
+    struct rect
+       int left;
+       int top;
+       int right;
+       int bottom;
+    end
 
+    struct program_ui
+       int left;
+       int top;
+       int program_entries = 10;
+    end
+
+begin
+    draw(3, 32, 15, 0, 0, 0, 640, 480);
+
+    // Puzzle area:
+    draw(3, 1, 15, 0,
+        border_x, border_y,
+        border_x + (width * cells), border_y + (width * rows));
+
+    for (ite.y = 0; ite.y < rows; ite.y++)
+        for (ite.x = 0; ite.x < cells; ite.x++)
+            rect.left = ite.x * width + border_x;
+            rect.top = ite.y * width + border_y;
+            rect.right = rect.left + width;
+            rect.bottom = rect.top + width;
+
+            if (flag)
+               draw(3, 19, 15, 0,
+                    rect.left, rect.top,
+                    rect.right, rect.bottom);
+            end
+            flag = !flag;
+        end
+        if (cells % 2 == 0) flag = !flag; end
+    end
+
+    // Program UI:
+    program_ui.left = border_x * 2 + (width * cells);
+    program_ui.top = border_x;
+
+    draw(3, 254, 15, 0,
+        program_ui.left , program_ui.top,
+        640 - border_x, 480 - border_x);
+
+    for (ite.x = 0; ite.x < program_ui.program_entries; ite.x++)
+        draw_program_row(program_ui.left + border_x,
+                         program_ui.top + border_x + (width * ite.x),
+                         flag);
+        flag = !flag;
+    end
+end
+
+function draw_program_row(int x ,int y, int flag)
+private
+    int cell_width = 32;
+    int color_a, color_b;
+
+begin
+    if (flag)
+        color_a = 160; color_b = 118;
+    else
+        color_a = 118; color_b = 160;
+    end
+
+    draw_program_cell(x, y, color_a, cell_width);
+    draw_program_cell(x + cell_width, y, color_b, cell_width);
+end
+
+function draw_program_cell(int x, int y, int color, int width)
+begin
+    draw(3, color, 15, 0, x, y, x + width, y + width);
 end
 
 /////////////////
