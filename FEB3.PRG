@@ -47,11 +47,16 @@ const
     BLOCK_REPEAT_8          = 28;  // Repeat x8
     BLOCK_REPEAT_9          = 29;  // Repeat x9
 
+    MOUSE_ICON              = 99;
+
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
+    MAX_AVAILABLE_BLOCKS = 9;
 
     // Scenario
     TILE_SIZE = 32;
+    UI_OFFSET_X = 32 * 15;
+    UI_OFFSET_Y = 16;
 
 global
 
@@ -92,7 +97,9 @@ global
 
     // For UI
     int id_selected = 0;
-    int level_file_handle = 0;
+
+    // Resources
+    int file_ui;
 
 //// LOCAL
 
@@ -105,7 +112,7 @@ private
 
 begin
     made_with_div2_intro();
-    // load_resources();
+    load_resources();
     config_game();
     // screen_mockap();
     play_game();
@@ -150,6 +157,11 @@ end
 /////////////////
 //// CONFIGURATION
 /////////////////
+function load_resources()
+begin
+    file_ui = load_fpg("PROJECTS\FEB3\UI_BLOCK.FPG");
+end
+
 function config_game()
 private
     map;
@@ -464,7 +476,7 @@ end
 
 function waiting_for_exec()
 begin
-    return (timer[1] < 1000); //g_current_level.decission_time);
+    return (timer[1] < g_level_data.time);
 end
 
 /////////////////
@@ -476,7 +488,17 @@ private
     int f;
     int level;
 begin
-    f = fopen("LEVELS.DAT", "r+");
+    f = fopen("PROJECT\FEB3\LEVELS.DAT", "r+");
+    if (f == 0)
+        f = fopen("PROJECT\FEB3\LEVELS.DAT", "w+");
+        from level = 1 to 10;
+            fwrite(offset g_level_data, sizeof(g_level_data), f);
+            fwrite(offset g_current_program, sizeof(g_current_program), f);
+        end
+        fclose(f);
+
+        f = fopen("PROJECT\FEB3\LEVELS.DAT", "r+");
+    end
 
     from level = 1 to 10;
         load_level(f);
@@ -488,28 +510,161 @@ end
 
 function play_level()
 private
-    id_player;
+    int id_ui;
 begin
     timer[1] = 0;
     player();
-    ui_control();
+    id_ui = ui_control();
 
-    while (get_id(type player))
+    while (is_program_running() != 0)
         frame;
     end
+
+    signal(id_ui, s_kill_tree);
 end
 
 function load_level(f)
 begin
     if (fread(offset g_level_data, sizeof(g_level_data), f) == 0)
-        fwrite(offset g_level_data, sizeof(g_level_data), f);
     end
 
     if (fread(offset g_current_program, sizeof(g_current_program), f))
-        fwrite(offset g_current_program, sizeof(g_current_program), f);
+    end
+
+    // load_scenario();
+end
+
+/////////////////
+//// UI LOGIC
+/////////////////
+
+process ui_control()
+private
+    int tmp, id_col, mouse_down = false;
+    int joy_speed_x = 0;
+    int joy_speed_y = 0;
+begin
+    file = file_ui;
+    graph = MOUSE_ICON;
+
+    // spawn program blocks
+    for (x = 0; x < MAX_PROGRAM_BLOCKS; x++)
+        ui_program_block(x);
+    end
+
+    // spawn available blocks
+    for (x = 0; x < MAX_AVAILABLE_BLOCKS; x++)
+        ui_available_block(x);
+    end
+
+    frame;
+    priority++;
+
+    while (waiting_for_exec())
+
+        if (joy.left) joy_speed_x -= 1;
+        else if (joy.right) joy_speed_x += 1;
+        else joy_speed_x = lerp(joy_speed_x, 0, 50); end end
+
+        if (joy.up) joy_speed_y -= 1;
+        else if (joy.down) joy_speed_y += 1;
+        else joy_speed_y = lerp(joy_speed_y, 0, 50); end end
+
+        joy_speed_x = clamp(joy_speed_x, -6, 6);
+        joy_speed_y = clamp(joy_speed_y, -6, 6);
+
+        mouse.x += joy_speed_x;
+        mouse.y += joy_speed_y;
+
+        x = mouse.x;
+        y = mouse.y;
+
+        if (mouse_down)
+            mouse_down = mouse.left or joy.button1;
+        else
+            mouse_down = mouse.left or joy.button1;
+            if (mouse_down)
+                id_col = collision(type ui_block);
+
+                if (id_col != 0)
+                    if (id_selected == 0)
+                        // Select this if no one selected
+                        id_selected = id_col;
+                    else
+                        // Otherwise, swap graphs ...
+                        tmp = id_selected.graph;
+                        id_selected.graph = id_col.graph;
+                        id_col.graph = tmp;
+                        // and deselect
+                        id_selected = 0;
+                    end
+                end
+            end
+        end
+
+        frame;
+    end
+
+    loop
+        frame;
     end
 end
 
-process ui_control()
+process ui_block(row, column, graph)
 begin
+    x = (column * TILE_SIZE) + UI_OFFSET_X;
+    y = (row * TILE_SIZE) + UI_OFFSET_Y;
+    file = file_ui;
+
+    loop
+        frame;
+    end
+end
+
+process ui_program_block(idx)
+private
+    id0, id1;
+begin
+
+    if (g_current_program.instructions[idx].indent == 0)
+        id0 = ui_block(idx, 0, g_current_program.instructions[idx].block);
+        id1 = ui_block(idx, 1, BLOCK_EMPTY);
+    else
+        id0 = ui_block(idx, 0, BLOCK_EMPTY);
+        id1 = ui_block(idx, 1, g_current_program.instructions[idx].block);
+    end
+
+    while(waiting_for_exec())
+        frame;
+
+
+        if(id1.graph == BLOCK_EMPTY)
+            g_current_program.instructions[idx].indent = 0;
+            g_current_program.instructions[idx].block = id0.graph;
+        else
+            g_current_program.instructions[idx] = 1;
+            g_current_program.instructions[idx].block = id1.graph;
+        end
+    end
+
+    loop
+        frame;
+    end
+end
+
+process ui_available_block(idx)
+private id3;
+begin
+
+    id3 = ui_block(idx, 3, g_level_data.blocks[idx]);
+
+    while(waiting_for_exec())
+        frame;
+
+        g_level_data.blocks[idx] = id3.graph;
+    end
+
+    loop
+        frame;
+    end
 end
