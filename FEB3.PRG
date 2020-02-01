@@ -21,7 +21,7 @@ program FEB3;
 
 const
     // Special blocks
-    BLOCK_EMPTY             = 0;   // empty slot
+    BLOCK_EMPTY             = 30;  // empty slot
     BLOCK_END               = 255; // end of program
 
     // Movement blocks
@@ -65,12 +65,12 @@ global
     struct g_current_program
         // Program content
         struct instructions[9]
-            byte block = 0;
+            byte block = 30;
             byte indent = 0;
         end
 
         // Current block being executed
-        byte current_block = 0;
+        byte current_block = 30;
 
         // If there is an ongoing repeat
         struct current_repeat
@@ -541,11 +541,8 @@ end
 
 function load_level(f)
 begin
-    if (fread(offset g_level_data, sizeof(g_level_data), f) == 0)
-    end
-
-    if (fread(offset g_current_program, sizeof(g_current_program), f))
-    end
+    fread(offset g_level_data, sizeof(g_level_data), f);
+    fread(offset g_current_program, sizeof(g_current_program), f);
 
     // load_scenario();
 end
@@ -641,6 +638,7 @@ begin
     x = (column * TILE_SIZE) + UI_OFFSET_X + (TILE_SIZE / 2);
     y = (row * TILE_SIZE) + UI_OFFSET_Y + (TILE_SIZE / 2);
     file = file_ui;
+    if (graph == 0) graph = BLOCK_EMPTY; end
 
     loop
         frame;
