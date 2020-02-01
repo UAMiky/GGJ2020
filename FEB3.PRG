@@ -172,6 +172,11 @@ begin
     load_pal("DIV2.PAL");
     set_mode(m640x480);
     vsync = 1;
+
+    define_region(2, UI_OFFSET_X, UI_OFFSET_Y,
+                  TILE_SIZE * 2, TILE_SIZE * MAX_PROGRAM_BLOCKS);
+    define_region(3, UI_OFFSET_X + 3 * TILE_SIZE, UI_OFFSET_Y,
+                  TILE_SIZE, TILE_SIZE * MAX_AVAILABLE_BLOCKS);
 end
 
 /////////////////
@@ -642,6 +647,7 @@ begin
     y = (row * TILE_SIZE) + UI_OFFSET_Y + (TILE_SIZE / 2);
     file = file_ui;
     if (graph == 0) graph = BLOCK_EMPTY; end
+    if (column == 3) region = 3; else region = 2; end
 
     loop
         frame;
