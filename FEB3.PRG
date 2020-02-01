@@ -231,7 +231,13 @@ end
 
 function clamp_anim(id_process, min_graph, max_graph)
 begin
-    id_process.graph = clamp(id_process.graph, min_graph, max_graph);
+    if (id_process.graph > max_graph)
+        id_process.graph = min_graph;
+    end
+
+    if (id_process.graph < min_graph)
+        id_process.graph = max_graph;
+    end
 end
 
 function lerp(a, b, t)
@@ -241,7 +247,9 @@ end
 
 process simple_sprite(x,y,z,file,graph)
 begin
-    loop frame; end
+    loop
+        frame;
+    end
 end
 
 //////////////////
@@ -348,14 +356,14 @@ begin
 
     while (waiting_for_exec() != 0)
         player_anim(id, BLOCK_SLEEP_MODE);
-        frame;
+        frame(player_animation_delay(graph));
     end
 
     program_executor(id);
 
     while(is_program_running() != 0)
         player_anim(id, g_current_program.current_block);
-        frame;
+        frame(player_animation_delay(graph));
     end
 end
 
@@ -364,22 +372,20 @@ begin
     player_id.graph++;
 
     switch (current_block)
-        case BLOCK_SLEEP_MODE:        clamp_anim(player_id, 1, 4); end
-        case BLOCK_MOVE_FORWARD:      clamp_anim(player_id, 1, 4); end
-        case BLOCK_MOVE_BACKWARDS:    clamp_anim(player_id, 1, 4); end
-        case BLOCK_TURN_LEFT:         clamp_anim(player_id, 1, 4); end
-        case BLOCK_TURN_RIGHT:        clamp_anim(player_id, 1, 4); end
-        case BLOCK_TOOL_TORCH:        clamp_anim(player_id, 1, 4); end
-        case BLOCK_TOOL_EXTINGUISHER: clamp_anim(player_id, 1, 4); end
-        case BLOCK_TOOL_WRENCH:       clamp_anim(player_id, 1, 4); end
+        case BLOCK_SLEEP_MODE:        clamp_anim(player_id, 1, 3); end
+        case BLOCK_MOVE_FORWARD:      clamp_anim(player_id, 1, 3); end
+        case BLOCK_MOVE_BACKWARDS:    clamp_anim(player_id, 1, 3); end
+        case BLOCK_TURN_LEFT:         clamp_anim(player_id, 1, 3); end
+        case BLOCK_TURN_RIGHT:        clamp_anim(player_id, 1, 3); end
+        case BLOCK_TOOL_TORCH:        clamp_anim(player_id, 1, 3); end
+        case BLOCK_TOOL_EXTINGUISHER: clamp_anim(player_id, 1, 3); end
+        case BLOCK_TOOL_WRENCH:       clamp_anim(player_id, 1, 3); end
     end
-
-    frame(player_animation_delay(player_id.graph));
 end
 
 function player_animation_delay(player_graph)
 begin
-    return (100);
+    return (300);
 end
 
 function player_advance(id_player, direction)
@@ -399,10 +405,10 @@ begin
         case 270000: dest_x += direction * TILE_SIZE; move_x = +direction; end
     end
 
-    while ( (id_player.x != dest_x) && (id_player.y != dest_y) )
+    while ( (id_player.x != dest_x) || (id_player.y != dest_y) )
         id_player.x += move_x;
         id_player.y += move_y;
-        frame;
+        frame(500);
     end
 end
 
