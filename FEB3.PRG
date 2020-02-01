@@ -52,7 +52,7 @@ const
 
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
-    MAX_AVAILABLE_BLOCKS = 9;
+    MAX_AVAILABLE_BLOCKS = 12;
 
     // Scenario
     TILE_SIZE = 32;
@@ -83,7 +83,7 @@ global
     struct g_level_data
         int time = 1000;      // Time before program is started
         byte tiles[12,12];    // Tiles on scenario
-        byte blocks[8];       // Available blocks
+        byte blocks[11];      // Available blocks
         struct start
             byte tile_x = 6;  // Start column
             byte tile_y = 12; // Start row
@@ -503,16 +503,16 @@ private
     int level;
 
 begin
-    f = fopen("PROJECT\FEB3\LEVELS.DAT", "r+");
+    f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r+");
     if (f == 0)
-        f = fopen("PROJECT\FEB3\LEVELS.DAT", "w+");
+        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "w+");
         from level = 1 to 10;
             fwrite(offset g_level_data, sizeof(g_level_data), f);
             fwrite(offset g_current_program, sizeof(g_current_program), f);
         end
         fclose(f);
 
-        f = fopen("PROJECT\FEB3\LEVELS.DAT", "r+");
+        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r+");
     end
 
     from level = 1 to 10;
@@ -627,6 +627,9 @@ begin
 
         frame;
     end
+
+    id_selector.graph = 0;
+    id_selected = 0;
 
     loop
         frame;
