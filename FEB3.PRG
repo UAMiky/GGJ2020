@@ -56,12 +56,14 @@ global
         // Program content (two levels of indentation)
         int blocks[9,1];
 
+        // Current instruction being executed
         int current_index = 0;
+        int current_block = 0;
 
         // If there is an ongoing repeat
         struct current_repeat
            int start_index = -1;   // First instruction in loop
-           int repeat_count = 0;   // Remaining loops
+           int count = 0;          // Remaining loops
         end
     end
 
@@ -138,12 +140,79 @@ end
 /////////////////
 function clamp(value, min, max)
 begin
-    if (value < min) return (min);
-    if (value > max) return (max);
+    if (value < min) return (min); end
+    if (value > max) return (max); end
     return (value);
+end
+
+function clamp_anim(id_process, min_graph, max_graph)
+begin
+    id_process.graph = clamp(id_process.graph, min_graph, max_graph);
 end
 
 function lerp(a, b, t)
 begin
     return (a * t + b * (1 - t));
+end
+
+/////////////////
+//// PLAYER
+/////////////////
+
+process player(int x, int y)
+begin
+    while(waiting_for_exec())
+        player_anim(id, BLOCK_SLEEP_MODE);
+        frame;
+    end
+
+    program_executor(id);
+    while(is_program_running())
+        player_anim(id, g_current_program.current_block);
+        frame;
+    end
+end
+
+function player_anim(player_id, current_block)
+begin
+    player_id.graph++;
+    switch (current_block)
+        case BLOCK_SLEEP_MODE:        clamp_anim(player_id, 1, 4); end
+        case BLOCK_MOVE_FORWARD:      clamp_anim(player_id, 1, 4); end
+        case BLOCK_MOVE_BACKWARDS:    clamp_anim(player_id, 1, 4); end
+        case BLOCK_TURN_LEFT:         clamp_anim(player_id, 1, 4); end
+        case BLOCK_TURN_RIGHT:        clamp_anim(player_id, 1, 4); end
+        case BLOCK_TOOL_TORCH:        clamp_anim(player_id, 1, 4); end
+        case BLOCK_TOOL_EXTINGUISHER: clamp_anim(player_id, 1, 4); end
+        case BLOCK_TOOL_WRENCH:       clamp_anim(player_id, 1, 4); end
+    end
+    frame(player_animation_delay(player_id.graph));
+end
+
+function player_animation_delay(player_graph)
+begin
+    return (100);
+end
+
+/////////////////
+//// PROGRAM EXECUTION
+/////////////////
+
+process program_executor(id_player)
+begin
+    priority = id_player.priority + 1;
+
+    g_current_program.current_index = 0;
+    g_current_program.current_repeat.count = 0;
+    g_current_program.current_block = g_current_program.blocks[0,0];
+end
+
+function is_program_running()
+begin
+    return (g_current_program.current_block != BLOCK_END);
+end
+
+function waiting_for_exec()
+begin
+    return (timer[1] < 10000); //g_current_level.decission_time);
 end
