@@ -83,8 +83,9 @@ private
     int option;
 
 begin
+    made_with_div2_intro();
     // load_resources();
-    // config_game();
+    config_game();
 
     repeat
         option = main_menu();
@@ -99,6 +100,41 @@ begin
             end
         end
     until (option < 1 || option > 2);
+end
+
+/////////////////
+//// MADE WITH DIV2 INTRO
+/////////////////
+function made_with_div2_intro()
+private
+    int pos;
+
+begin
+    start_fli("help\help.fli", 0, 0);
+
+    repeat
+        pos = frame_fli();
+        frame;
+    until (pos == 0);
+
+    end_fli();
+
+    frame(3000);
+end
+
+/////////////////
+//// CONFIGURATION
+/////////////////
+function config_game()
+private
+    map;
+
+begin
+    load_pal("DIV2.PAL");
+    set_mode(m640x480);
+    map = new_map(320, 200, 0, 0, 15);
+    put(0, map, 0, 0);
+    frame;
 end
 
 /////////////////
@@ -158,7 +194,15 @@ end
 
 function lerp(a, b, t)
 begin
-    return (a * t + b * (1 - t));
+    return ((a * t + b * (100 - t)) / 100);
+end
+
+//////////////////
+//// SCREEN MOCKAP
+//////////////////
+process screen_mockap()
+begin
+
 end
 
 /////////////////
