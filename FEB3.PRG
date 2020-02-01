@@ -171,9 +171,7 @@ private
 begin
     load_pal("DIV2.PAL");
     set_mode(m640x480);
-    //map = new_map(320, 200, 0, 0, 15);
-    //put(0, map, 0, 0);
-    frame;
+    vsync = 1;
 end
 
 /////////////////
@@ -249,12 +247,15 @@ private
     struct ite
         int x, y;
     end
-    flag = true;
+
+    int flag = true;
+
     int width = 32;
     int border_x = 16;
     int border_y = 48;
     int cells = 13;
     int rows = 13;
+
     struct rect
        int left;
        int top;
@@ -346,6 +347,7 @@ begin
     end
 
     program_executor(id);
+
     while(is_program_running() != 0)
         player_anim(id, g_current_program.current_block);
         frame;
@@ -355,6 +357,7 @@ end
 function player_anim(player_id, current_block)
 begin
     player_id.graph++;
+
     switch (current_block)
         case BLOCK_SLEEP_MODE:        clamp_anim(player_id, 1, 4); end
         case BLOCK_MOVE_FORWARD:      clamp_anim(player_id, 1, 4); end
@@ -365,6 +368,7 @@ begin
         case BLOCK_TOOL_EXTINGUISHER: clamp_anim(player_id, 1, 4); end
         case BLOCK_TOOL_WRENCH:       clamp_anim(player_id, 1, 4); end
     end
+
     frame(player_animation_delay(player_id.graph));
 end
 
@@ -376,6 +380,7 @@ end
 function player_advance(id_player, direction)
 private
     int dest_x, dest_y, move_x, move_y;
+
 begin
     dest_x = id_player.x;
     dest_y = id_player.y;
@@ -420,6 +425,7 @@ process program_executor(id_player)
 private
     byte idx;
     byte block;
+
 begin
     // We should be run before the player
     priority = id_player.priority + 1;
@@ -467,6 +473,7 @@ end
 function set_current_block(byte idx)
 private
     byte block;
+
 begin
     block = BLOCK_END;
     if (idx < MAX_PROGRAM_BLOCKS)
@@ -494,6 +501,7 @@ process play_game()
 private
     int f;
     int level;
+
 begin
     f = fopen("PROJECT\FEB3\LEVELS.DAT", "r+");
     if (f == 0)
@@ -518,6 +526,7 @@ end
 function play_level()
 private
     int id_ui;
+
 begin
     timer[1] = 0;
     player();
@@ -551,6 +560,7 @@ private
     int joy_speed_x = 0;
     int joy_speed_y = 0;
     int id_selector;
+
 begin
     file = file_ui;
     graph = MOUSE_ICON;
@@ -569,6 +579,7 @@ begin
     end
 
     frame;
+
     priority++;
 
     while (waiting_for_exec())
@@ -639,6 +650,7 @@ end
 process ui_program_block(idx)
 private
     id0, id1;
+
 begin
 
     if (g_current_program.instructions[idx].indent == 0)
@@ -651,7 +663,6 @@ begin
 
     while(waiting_for_exec())
         frame;
-
 
         if(id1.graph == BLOCK_EMPTY)
             g_current_program.instructions[idx].indent = 0;
@@ -668,9 +679,10 @@ begin
 end
 
 process ui_available_block(idx)
-private id3;
-begin
+private
+    id3;
 
+begin
     id3 = ui_block(idx, 3, g_level_data.blocks[idx]);
 
     while(waiting_for_exec())
