@@ -51,7 +51,7 @@ const
     MAX_PROGRAM_BLOCKS = 10;
 
     // Scenario
-    TILE_SIZE = 16;
+    TILE_SIZE = 32;
 
 global
 
