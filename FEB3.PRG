@@ -68,8 +68,25 @@ global
 
         // If there is an ongoing repeat
         struct current_repeat
-           int start_index = -1;   // First instruction in loop
-           int count = 0;          // Remaining loops
+           byte start_index = 0;    // First instruction in loop
+           byte count = 0;          // Remaining loops
+        end
+    end
+
+    // Level config
+    struct g_level_data
+        int time = 1000;      // Time before program is started
+        byte tiles[12,12];    // Tiles on scenario
+        byte blocks[8];       // Available blocks
+        struct start
+            byte tile_x = 6;  // Start column
+            byte tile_y = 12; // Start row
+            byte rot = 0;     // Start rotation
+        end
+        struct goals[3]       // Level goals: use tool over tile
+            byte tile_x;
+            byte tile_y;
+            byte tool = BLOCK_EMPTY;
         end
     end
 
@@ -299,7 +316,7 @@ begin
     idx = 0;
     g_current_program.current_repeat.count = 0;
     block = set_current_block(0);
-    
+
     while (block != BLOCK_END)
         // Check if a loop should start
         if (block >= BLOCK_REPEAT_2)
@@ -309,7 +326,7 @@ begin
            block = set_current_block(idx);
            continue;
         end
-        
+
         // Check if current loop should repeat
         if ( (g_current_program.current_repeat.count > 0) &&
              (g_current_program.instructions[idx].indent == 0) )
@@ -318,7 +335,7 @@ begin
             block = set_current_block(idx);
             continue;
         end
-        
+
         // Execute current block
         switch (block)
             case BLOCK_MOVE_FORWARD:      player_advance(id_player, +1);    end
