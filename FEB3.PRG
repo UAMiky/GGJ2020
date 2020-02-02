@@ -126,15 +126,17 @@ global
           1,  1,  0; // sleep
 
     struct g_level_maps
-        int background = 1;
-        int floor_first = 2;
-        int floor_last = 5;
-        int floor_canvas = 6;
+        int background      = 1;
+        int floor_first     = 2;
+        int floor_last      = 5;
+        int floor_canvas    = 6;
     end
 
     int g_scene_tile_anims[5] =
-        1, 2, 3,   // Burning motor
-        4, 5, 6;   // Leaking pipe
+        11, 12, 13,   // Burning motor
+        31, 31, 31;   // Extinguish engine
+
+    int g_scene_tiles[12, 12];
 
     int player_rot;
 
@@ -148,6 +150,8 @@ global
     int file_foam;
 
 //// LOCAL
+local
+    int index;
 
 /////////////////
 //// MAIN PROGRAM
@@ -393,6 +397,7 @@ process player()
 begin
     x = g_level_data.start.tile_x * TILE_SIZE + TILE_SIZE;
     y = (g_level_data.start.tile_y + 1) * TILE_SIZE + TILE_SIZE;
+    z = -100;
     file = file_player;
     player_rot = g_level_data.start.rot;
 
@@ -488,6 +493,8 @@ begin
 end
 
 function use_tool(id_player, block)
+private
+    int change_anim = false;
 begin
     x = (id_player.x - TILE_SIZE) / TILE_SIZE;
     y = (id_player.y - 2 * TILE_SIZE) / TILE_SIZE;
@@ -504,6 +511,7 @@ begin
              (g_level_data.goals[z].tile_x == x) &&
              (g_level_data.goals[z].tile_y == y) )
             g_level_data.goals[z].tool = 0;
+            change_anim = true;
         end
     end
 
@@ -511,6 +519,10 @@ begin
 
     if (block == BLOCK_TOOL_EXTINGUISHER)
         extinguisher_smoke(id_player);
+    end
+
+    if (change_anim)
+        g_scene_tiles[x, y].index += 3;
     end
 
     frame (4 * 300);
@@ -663,7 +675,7 @@ begin
     fread(offset g_level_data, sizeof(g_level_data), f);
     fread(offset g_current_program, sizeof(g_current_program), f);
 
-    // load_scenario();
+    load_scenario();
 end
 
 function play_level(f)
@@ -705,8 +717,10 @@ begin
     for (x = 0; x < 13; x++)
         for (y = 0; y < 13; y++)
             tile = g_level_data.tiles[x,y];
+            g_scene_tiles[x, y] = 0;
+
             if (tile != 0)
-                scene_tile(tile);
+                g_scene_tiles[x, y] = scene_tile(tile, x, y);
             end
         end
     end
@@ -736,11 +750,20 @@ begin
     fseek(f, -sizeof(g_current_program), seek_cur);
 end
 
-process scene_tile(kind)
+process scene_tile(kind, x, y)
+private
+    int step_anim = 0;
+
 begin
-    graph = kind;
+    file = file_level;
+    index = (kind - 1) * 3;
+    x = x * TILE_SIZE + TILE_SIZE;
+    y = (y + 2) * TILE_SIZE;
+
     loop
-        frame;
+        graph = g_scene_tile_anims[index + step_anim];
+        step_anim = (step_anim + 1) % 3;
+        frame(200);
     end
 end
 
