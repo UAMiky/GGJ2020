@@ -68,6 +68,8 @@ const
 
 global
 
+    g_tutorial = false;
+
     // Program execution context
     struct g_current_program
         // Current block being executed
@@ -663,9 +665,12 @@ begin
         f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r");
     end
 
-    from level = 1 to 10;
+    level = 1;
+    while (level <= 10)
         load_level(f);
-        play_level(f);
+        if(play_level(level, f))
+            level++;
+        end
     end
 
     fclose(f);
@@ -679,7 +684,7 @@ begin
     load_scenario();
 end
 
-function play_level(f)
+function play_level(level, f)
 private
     int winner = true;
     int id_ui;
@@ -704,12 +709,14 @@ begin
     if (winner)
         level_complete();
     else
-        level_failed(f);
+        level_failed(level, f);
     end
 
     signal(type scene_tile, s_kill);
     signal(id_player, s_kill_tree);
     signal(id_ui, s_kill_tree);
+
+    return (winner);
 end
 
 function load_scenario()
@@ -737,14 +744,21 @@ begin
     delete_text(id_text);
 end
 
-function level_failed(f)
+function level_failed(level, f)
 private
     int id_text;
 begin
     //
     id_text = write(0, 320, 240, 4, "LEVEL FAILED");
-    frame(fps * 300);
+
+    if(level == 1)
+        g_tutorial = true;
+    end
+
+    frame(fps * 500);
+    g_tutorial = false;
     delete_text(id_text);
+
 
     // Rewind current level data
     fseek(f, -sizeof(g_level_data), seek_cur);
@@ -887,6 +901,8 @@ begin
 end
 
 process ui_block(row, column, graph)
+private
+    curr_t = 0;
 begin
     x = (column * TILE_SIZE) + UI_OFFSET_X + (TILE_SIZE / 2);
     y = (row * TILE_SIZE) + UI_OFFSET_Y + (TILE_SIZE / 2);
@@ -897,6 +913,15 @@ begin
     if (column == 3) region = 3; else region = 2; end
 
     loop
+        if (g_tutorial)
+            curr_t = timer[0] % 100;
+            if(graph == BLOCK_TOOL_EXTINGUISHER)
+                size = curr_t + 100;
+            else if (graph == BLOCK_MOVE_FORWARD)
+                size = 200 - curr_t;
+            end end
+        end
+
         frame;
     end
 end
