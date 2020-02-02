@@ -96,6 +96,23 @@ global
         end
     end
 
+    struct g_player_anims[4]
+        int first;
+        int last;
+        int flags;
+    end =
+        // walk up
+        1, 4, 0,
+        // walk left
+        5, 8, 1,
+        // walk down
+        9, 12, 0,
+        // walk right
+        5, 8, 0,
+        ;
+
+    int player_rot;
+
     // For UI
     int id_selected = 0;
 
@@ -359,9 +376,9 @@ end
 
 process player()
 begin
-    x = g_level_data.start.tile_x * TILE_SIZE + (TILE_SIZE / 2);
-    y = (g_level_data.start.tile_y + 1) * TILE_SIZE + (TILE_SIZE / 2);
-    angle = 90000 * g_level_data.start.rot;
+    x = g_level_data.start.tile_x * TILE_SIZE + TILE_SIZE;
+    y = (g_level_data.start.tile_y + 1) * TILE_SIZE + TILE_SIZE;
+    player_rot = g_level_data.start.rot;
 
     while (waiting_for_exec() != 0)
         player_anim(id, BLOCK_SLEEP_MODE);
@@ -381,14 +398,14 @@ begin
     player_id.graph++;
 
     switch (current_block)
-        case BLOCK_SLEEP_MODE:        clamp_anim(player_id, 1, 3); end
-        case BLOCK_MOVE_FORWARD:      clamp_anim(player_id, 1, 3); end
-        case BLOCK_MOVE_BACKWARDS:    clamp_anim(player_id, 1, 3); end
-        case BLOCK_TURN_LEFT:         clamp_anim(player_id, 1, 3); end
-        case BLOCK_TURN_RIGHT:        clamp_anim(player_id, 1, 3); end
-        case BLOCK_TOOL_TORCH:        clamp_anim(player_id, 1, 3); end
-        case BLOCK_TOOL_EXTINGUISHER: clamp_anim(player_id, 1, 3); end
-        case BLOCK_TOOL_WRENCH:       clamp_anim(player_id, 1, 3); end
+        case BLOCK_SLEEP_MODE:        clamp_anim(player_id, 1, 1); end
+        case BLOCK_MOVE_FORWARD:      clamp_anim(player_id, 1, 4); end
+        case BLOCK_MOVE_BACKWARDS:    clamp_anim(player_id, 1, 4); end
+        case BLOCK_TURN_LEFT:         clamp_anim(player_id, 1, 4); end
+        case BLOCK_TURN_RIGHT:        clamp_anim(player_id, 1, 4); end
+        case BLOCK_TOOL_TORCH:        clamp_anim(player_id, 1, 4); end
+        case BLOCK_TOOL_EXTINGUISHER: clamp_anim(player_id, 1, 4); end
+        case BLOCK_TOOL_WRENCH:       clamp_anim(player_id, 1, 4); end
     end
 end
 
@@ -407,11 +424,11 @@ begin
     move_x = 0;
     move_y = 0;
 
-    switch(id_player.angle)
-        case 0:      dest_y -= direction * TILE_SIZE; move_y = -direction; end
-        case 90000:  dest_x -= direction * TILE_SIZE; move_x = -direction; end
-        case 180000: dest_y += direction * TILE_SIZE; move_y = +direction; end
-        case 270000: dest_x += direction * TILE_SIZE; move_x = +direction; end
+    switch(player_rot)
+        case 0: dest_y -= direction * TILE_SIZE; move_y = -direction; end
+        case 1: dest_x -= direction * TILE_SIZE; move_x = -direction; end
+        case 2: dest_y += direction * TILE_SIZE; move_y = +direction; end
+        case 3: dest_x += direction * TILE_SIZE; move_x = +direction; end
     end
 
     while ( (id_player.x != dest_x) || (id_player.y != dest_y) )
@@ -421,8 +438,14 @@ begin
     end
 end
 
-function player_rotate(id_player, rot)
+function player_rotate_left(id_player)
 begin
+    player_rot = (player_rot + 1) & 3;
+end
+
+function player_rotate_right(id_player)
+begin
+    player_rot = (player_rot + 3) & 3;
 end
 
 function use_extinguisher(id_player)
@@ -476,13 +499,13 @@ begin
 
         // Execute current block
         switch (block)
-            case BLOCK_MOVE_FORWARD:      player_advance(id_player, +1); end
-            case BLOCK_MOVE_BACKWARDS:    player_advance(id_player, -1); end
-            case BLOCK_TURN_LEFT:         player_rotate(id_player, -90); end
-            case BLOCK_TURN_RIGHT:        player_rotate(id_player, +90); end
-            case BLOCK_TOOL_EXTINGUISHER: use_extinguisher(id_player);   end
-            case BLOCK_TOOL_TORCH:        use_torch(id_player);          end
-            case BLOCK_TOOL_WRENCH:       use_wrench(id_player);         end
+            case BLOCK_MOVE_FORWARD:      player_advance(id_player, +1);  end
+            case BLOCK_MOVE_BACKWARDS:    player_advance(id_player, -1);  end
+            case BLOCK_TURN_LEFT:         player_rotate_left(id_player);  end
+            case BLOCK_TURN_RIGHT:        player_rotate_right(id_player); end
+            case BLOCK_TOOL_EXTINGUISHER: use_extinguisher(id_player);    end
+            case BLOCK_TOOL_TORCH:        use_torch(id_player);           end
+            case BLOCK_TOOL_WRENCH:       use_wrench(id_player);          end
         end
 
         idx++;
@@ -546,16 +569,18 @@ end
 function play_level()
 private
     int id_ui;
-
+    int id_player;
 begin
     timer[1] = 0;
-    player();
+    id_player = player();
     id_ui = ui_control();
 
     while (is_program_running() != 0)
         frame;
     end
 
+    signal(type scene_tile, s_kill);
+    signal(id_player, s_kill_tree);
     signal(id_ui, s_kill_tree);
 end
 
@@ -565,6 +590,14 @@ begin
     fread(offset g_current_program, sizeof(g_current_program), f);
 
     // load_scenario();
+end
+
+process scene_tile(kind)
+begin
+    graph = kind;
+    loop
+        frame;
+    end
 end
 
 /////////////////
