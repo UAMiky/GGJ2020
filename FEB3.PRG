@@ -405,15 +405,33 @@ begin
     player_id.graph++;
 
     switch (current_block)
-        case BLOCK_SLEEP_MODE:        clamp_anim(player_id, 1, 1); end
-        case BLOCK_MOVE_FORWARD:      clamp_anim(player_id, 1, 4); end
-        case BLOCK_MOVE_BACKWARDS:    clamp_anim(player_id, 1, 4); end
-        case BLOCK_TURN_LEFT:         clamp_anim(player_id, 1, 4); end
-        case BLOCK_TURN_RIGHT:        clamp_anim(player_id, 1, 4); end
-        case BLOCK_TOOL_TORCH:        clamp_anim(player_id, 1, 4); end
-        case BLOCK_TOOL_EXTINGUISHER: clamp_anim(player_id, 1, 4); end
-        case BLOCK_TOOL_WRENCH:       clamp_anim(player_id, 1, 4); end
+        case BLOCK_SLEEP_MODE:        player_anim_exec(player_id, 16); end
+        case BLOCK_MOVE_FORWARD:      player_anim_exec(player_id, 0); end
+        case BLOCK_MOVE_BACKWARDS:    player_anim_exec(player_id, 0); end
+        case BLOCK_TURN_LEFT:         player_anim_exec(player_id, 0); end
+        case BLOCK_TURN_RIGHT:        player_anim_exec(player_id, 0); end
+        case BLOCK_TOOL_EXTINGUISHER: player_anim_exec(player_id, 4); end
+        case BLOCK_TOOL_TORCH:        player_anim_exec(player_id, 8); end
+        case BLOCK_TOOL_WRENCH:       player_anim_exec(player_id, 12); end
     end
+end
+
+function player_anim_exec(player_id, anim_index)
+private
+    struct pointer g_player_anims anim;
+
+begin
+    anim = offset g_player_anims[anim_index + player_rot];
+
+    if (player_id.graph > anim.last)
+        player_id.graph = anim.first;
+    end
+
+    if (player_id.graph < anim.first)
+        player_id.graph = anim.last;
+    end
+
+    player_id.flags = anim.flags;
 end
 
 function player_animation_delay(player_graph)
