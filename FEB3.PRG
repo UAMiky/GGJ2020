@@ -125,6 +125,13 @@ global
           75, 85, 0, // wrench right
           1,  1,  0; // sleep
 
+    struct g_level_maps
+        int background = 1;
+        int floor_first = 2;
+        int floor_last = 5;
+        int floor_canvas = 6;
+    end
+
     int g_scene_tile_anims[5] =
         1, 2, 3,   // Burning motor
         4, 5, 6;   // Leaking pipe
@@ -137,9 +144,8 @@ global
     // Resources
     int file_ui;
     int file_player;
+    int file_level;
     int file_foam;
-
-    int game_background;
 
 //// LOCAL
 
@@ -200,9 +206,8 @@ function load_resources()
 begin
     file_ui         =   load_fpg("PROJECTS\FEB3\UI_BLOCK.FPG");
     file_player     =   load_fpg("PROJECTS\FEB3\PLAYER.FPG");
+    file_level      =   load_fpg("PROJECTS\FEB3\LEVEL.FPG");
     file_foam       =   load_fpg("PROJECTS\FEB3\FOAMEXTG.FPG");
-
-    game_background = load_pcx("PROJECTS\FEB3\BGND.PCX");
 end
 
 function config_game()
@@ -629,6 +634,8 @@ private
     int level;
 
 begin
+    create_game_background();
+
     f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r");
     if (f == 0)
         f = fopen("PROJECTS\FEB3\LEVELS.DAT", "w");
@@ -667,8 +674,6 @@ begin
     timer[1] = 0;
     id_player = player();
     id_ui = ui_control();
-
-    put_screen(0, game_background);
 
     while (is_program_running() != 0)
         frame;
@@ -735,6 +740,33 @@ begin
     loop
         frame;
     end
+end
+
+function create_game_background()
+private
+    int MAP_WIDTH = 32 * 13;
+
+    struct ite
+        int x, y;
+    end
+
+    int offset_x = 16;
+    int offset_y = 48;
+
+    int composition;
+
+begin
+    for (ite.y = 0; ite.y < 13; ite.y++)
+        for (ite.x = 0; ite.x < 13; ite.x++)
+            map_put(file_level,
+                    g_level_maps.floor_canvas,
+                    rand(g_level_maps.floor_first, g_level_maps.floor_last),
+                    (ite.x * 32) + 16, (ite.y * 32) + 16);
+        end
+    end
+
+    put(file_level, g_level_maps.floor_canvas, 16, 48);
+    put(file_level, g_level_maps.background, 0, 0);
 end
 
 /////////////////
