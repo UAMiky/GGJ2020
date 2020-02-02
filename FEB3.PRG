@@ -473,6 +473,13 @@ begin
     x = (id_player.x - TILE_SIZE) / TILE_SIZE;
     y = (id_player.y - 2 * TILE_SIZE) / TILE_SIZE;
 
+    switch(player_rot)
+        case 0: y--; end
+        case 1: x--; end
+        case 2: y++; end
+        case 3: x++; end
+    end
+
     for (z = 0; z < 3; z++)
         if ( (g_level_data.goals[z].tool == block) &&
              (g_level_data.goals[z].tile_x == x) &&
@@ -486,7 +493,7 @@ begin
     end
 
     frame(player_animation_delay(graph) *
-          (SMOKE_LAST_FRAME - SMOKE_FIRST_FRAME + 1));
+              (SMOKE_LAST_FRAME - SMOKE_FIRST_FRAME + 1));
 end
 
 process extinguisher_smoke(id_player)
@@ -616,14 +623,23 @@ begin
 
     from level = 1 to 10;
         load_level(f);
-        play_level();
+        play_level(f);
     end
 
     fclose(f);
 end
 
-function play_level()
+function load_level(f)
+begin
+    fread(offset g_level_data, sizeof(g_level_data), f);
+    fread(offset g_current_program, sizeof(g_current_program), f);
+
+    // load_scenario();
+end
+
+function play_level(f)
 private
+    int winner = true;
     int id_ui;
     int id_player;
 
@@ -638,17 +654,34 @@ begin
         frame;
     end
 
+    // check win condition
+    for (x = 0; winner && x < 4; x++)
+        if (g_level_data.goals[x].tool != 0)
+            winner = false;
+        end
+    end
+
+    if (winner)
+        level_complete();
+    else
+        level_failed(f);
+    end
+
     signal(type scene_tile, s_kill);
     signal(id_player, s_kill_tree);
     signal(id_ui, s_kill_tree);
 end
 
-function load_level(f)
+function level_complete()
 begin
-    fread(offset g_level_data, sizeof(g_level_data), f);
-    fread(offset g_current_program, sizeof(g_current_program), f);
+end
 
-    // load_scenario();
+function level_failed(f)
+begin
+
+    // Rewind current level data
+    fseek(f, -sizeof(g_level_data), seek_cur);
+    fseek(f, -sizeof(g_current_program), seek_cur);
 end
 
 process scene_tile(kind)
