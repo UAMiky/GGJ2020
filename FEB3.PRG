@@ -66,14 +66,8 @@ const
 
 global
 
-    // Program content
+    // Program execution context
     struct g_current_program
-        // Program content
-        struct instructions[9]
-            byte block = 30;
-            byte indent = 0;
-        end
-
         // Current block being executed
         byte current_block = 30;
 
@@ -89,6 +83,11 @@ global
         int time = 1000;      // Time before program is started
         byte tiles[12,12];    // Tiles on scenario
         byte blocks[11];      // Available blocks
+        // Program content
+        struct instructions[9]
+            byte block = 30;
+            byte indent = 0;
+        end
         struct start
             byte tile_x = 6;  // Start column
             byte tile_y = 12; // Start row
@@ -550,7 +549,7 @@ begin
     while (block != BLOCK_END)
         // Check if current loop should repeat
         if ( (g_current_program.current_repeat.count > 1) &&
-             (g_current_program.instructions[idx].indent == 0) )
+             (g_level_data.instructions[idx].indent == 0) )
 
             g_current_program.current_repeat.count--;
             idx = g_current_program.current_repeat.start_index;
@@ -596,7 +595,7 @@ begin
     block = BLOCK_END;
 
     if (idx < MAX_PROGRAM_BLOCKS)
-        block = g_current_program.instructions[idx].block;
+        block = g_level_data.instructions[idx].block;
     end
 
     g_current_program.current_block = block;
@@ -822,23 +821,23 @@ private
 
 begin
 
-    if (g_current_program.instructions[idx].indent == 0)
-        id0 = ui_block(idx, 0, g_current_program.instructions[idx].block);
+    if (g_level_data.instructions[idx].indent == 0)
+        id0 = ui_block(idx, 0, g_level_data.instructions[idx].block);
         id1 = ui_block(idx, 1, BLOCK_EMPTY);
     else
         id0 = ui_block(idx, 0, BLOCK_EMPTY);
-        id1 = ui_block(idx, 1, g_current_program.instructions[idx].block);
+        id1 = ui_block(idx, 1, g_level_data.instructions[idx].block);
     end
 
     while (waiting_for_exec())
         frame;
 
         if(id1.graph == BLOCK_EMPTY)
-            g_current_program.instructions[idx].indent = 0;
-            g_current_program.instructions[idx].block = id0.graph;
+            g_level_data.instructions[idx].indent = 0;
+            g_level_data.instructions[idx].block = id0.graph;
         else
-            g_current_program.instructions[idx].indent = 1;
-            g_current_program.instructions[idx].block = id1.graph;
+            g_level_data.instructions[idx].indent = 1;
+            g_level_data.instructions[idx].block = id1.graph;
         end
     end
 
