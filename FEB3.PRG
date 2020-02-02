@@ -110,17 +110,17 @@ global
           9,  12, 0, // walk down
           5,  8,  0, // walk right
           13, 20, 0, // ext. up
-          21, 28, 0, // ext. right
           21, 28, 1, // ext. left
           29, 36, 0, // ext. down
+          21, 28, 0, // ext. right
           37, 44, 0, // torch up
-          45, 52, 0, // torch right
           45, 52, 1, // torch left
           53, 62, 0, // torch down
+          45, 52, 0, // torch right
           63, 74, 0, // wrench up
-          75, 85, 0, // wrench right
           75, 85, 1, // wrench left
           86, 99, 0, // wrench down
+          75, 85, 0, // wrench right
           1,  1,  0; // sleep
 
     int player_rot;
@@ -462,12 +462,16 @@ end
 
 function player_rotate_left(id_player)
 begin
+    frame(300);
+    angle += 45000;
     player_rot = (player_rot + 1) & 3;
+    frame;
 end
 
 function player_rotate_right(id_player)
 begin
     player_rot = (player_rot + 3) & 3;
+    frame;
 end
 
 function use_tool(id_player, block)
@@ -490,8 +494,16 @@ begin
         end
     end
 
+    frame(4 * 300);
+
     if (block == BLOCK_TOOL_EXTINGUISHER)
         extinguisher_smoke(id_player);
+    end
+
+    frame (4 * 300);
+
+    if (block == BLOCK_TOOL_WRENCH)
+        frame (3 * 300);
     end
 
     frame(player_animation_delay(graph) *
@@ -536,6 +548,17 @@ begin
     block = set_current_block(0);
 
     while (block != BLOCK_END)
+        // Check if current loop should repeat
+        if ( (g_current_program.current_repeat.count > 1) &&
+             (g_current_program.instructions[idx].indent == 0) )
+
+            g_current_program.current_repeat.count--;
+            idx = g_current_program.current_repeat.start_index;
+            block = set_current_block(idx);
+
+            continue;
+        end
+
         // Check if a loop should start
         if (block >= BLOCK_REPEAT_2 && block <= BLOCK_REPEAT_9)
            idx++;
@@ -546,23 +569,12 @@ begin
            continue;
         end
 
-        // Check if current loop should repeat
-        if ( (g_current_program.current_repeat.count > 0) &&
-             (g_current_program.instructions[idx].indent == 0) )
-
-            g_current_program.current_repeat.count--;
-            idx = g_current_program.current_repeat.start_index;
-            block = set_current_block(idx);
-
-            continue;
-        end
-
         // Execute current block
         switch (block)
-            case BLOCK_MOVE_FORWARD:      player_advance(id_player, +1);  end
-            case BLOCK_MOVE_BACKWARDS:    player_advance(id_player, -1);  end
-            case BLOCK_TURN_LEFT:         player_rotate_left(id_player);  end
-            case BLOCK_TURN_RIGHT:        player_rotate_right(id_player); end
+            case BLOCK_MOVE_FORWARD:   player_advance(id_player, +1);  end
+            case BLOCK_MOVE_BACKWARDS: player_advance(id_player, -1);  end
+            case BLOCK_TURN_LEFT:      player_rotate_left(id_player);  end
+            case BLOCK_TURN_RIGHT:     player_rotate_right(id_player); end
 
             case BLOCK_TOOL_EXTINGUISHER,
                  BLOCK_TOOL_TORCH,
@@ -611,16 +623,16 @@ private
     int level;
 
 begin
-    f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r+");
+    f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r");
     if (f == 0)
-        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "w+");
+        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "w");
         from level = 1 to 10;
             fwrite(offset g_level_data, sizeof(g_level_data), f);
             fwrite(offset g_current_program, sizeof(g_current_program), f);
         end
         fclose(f);
 
-        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r+");
+        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r");
     end
 
     from level = 1 to 10;
@@ -679,7 +691,13 @@ begin
 end
 
 function level_failed(f)
+private
+    int id_text;
 begin
+    //
+    id_text = write(0, 320, 240, 4, "LEVEL FAILED");
+    frame(fps * 300);
+    delete_text(id_text);
 
     // Rewind current level data
     fseek(f, -sizeof(g_level_data), seek_cur);
