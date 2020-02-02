@@ -50,6 +50,9 @@ const
     MOUSE_ICON              = 99;
     SELECT_ICON             = 100;
 
+    SMOKE_FIRST_FRAME       = 1;
+    SMOKE_LAST_FRAME        = 3;
+
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
     MAX_AVAILABLE_BLOCKS = 12;
@@ -473,16 +476,44 @@ begin
     player_rot = (player_rot + 3) & 3;
 end
 
-function use_extinguisher(id_player)
+function use_tool(id_player, block)
 begin
+    x = (id_player.x - TILE_SIZE) / TILE_SIZE;
+    y = (id_player.y - 2 * TILE_SIZE) / TILE_SIZE;
+    for (z = 0; z < 3; z++)
+        if ( (g_level_data.goals[z].tool == block) &&
+             (g_level_data.goals[z].tile_x == x) &&
+             (g_level_data.goals[z].tile_y == y) )
+            g_level_data.goals[z].tool = 0;
+        end
+    end
+
+    if (block == BLOCK_TOOL_EXTINGUISHER)
+        extinguisher_smoke(id_player);
+    end
+
+    frame(player_animation_delay(graph) *
+        (SMOKE_LAST_FRAME - SMOKE_FIRST_FRAME));
 end
 
-function use_torch(id_player)
+process extinguisher_smoke(id_player)
 begin
-end
+    x = id_player.x;
+    y = id_player.y;
 
-function use_wrench(id_player)
-begin
+    switch(player_rot)
+        case 0: angle = 0;   y -= TILE_SIZE; end
+        case 1: angle = 90;  x -= TILE_SIZE; end
+        case 2: angle = 180; y += TILE_SIZE; end
+        case 3: angle = -90; x += TILE_SIZE; end
+    end
+
+    // TODO: File
+    graph = SMOKE_FIRST_FRAME;
+    while(graph < SMOKE_LAST_FRAME)
+        graph++;
+        frame(player_animation_delay(graph));
+    end
 end
 
 /////////////////
@@ -528,9 +559,12 @@ begin
             case BLOCK_MOVE_BACKWARDS:    player_advance(id_player, -1);  end
             case BLOCK_TURN_LEFT:         player_rotate_left(id_player);  end
             case BLOCK_TURN_RIGHT:        player_rotate_right(id_player); end
-            case BLOCK_TOOL_EXTINGUISHER: use_extinguisher(id_player);    end
-            case BLOCK_TOOL_TORCH:        use_torch(id_player);           end
-            case BLOCK_TOOL_WRENCH:       use_wrench(id_player);          end
+
+            case BLOCK_TOOL_EXTINGUISHER,
+                 BLOCK_TOOL_TORCH,
+                 BLOCK_TOOL_WRENCH:
+                use_tool(id_player, block);
+            end
         end
 
         idx++;
