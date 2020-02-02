@@ -537,7 +537,7 @@ begin
 
     while (block != BLOCK_END)
         // Check if a loop should start
-        if (block >= BLOCK_REPEAT_2)
+        if (block >= BLOCK_REPEAT_2 && block <= BLOCK_REPEAT_9)
            idx++;
            g_current_program.current_repeat.start_index = idx;
            g_current_program.current_repeat.count = block - BLOCK_REPEAT_0;
@@ -819,7 +819,7 @@ begin
             g_current_program.instructions[idx].indent = 0;
             g_current_program.instructions[idx].block = id0.graph;
         else
-            g_current_program.instructions[idx] = 1;
+            g_current_program.instructions[idx].indent = 1;
             g_current_program.instructions[idx].block = id1.graph;
         end
     end
