@@ -56,8 +56,8 @@ const
 
     // Scenario
     TILE_SIZE = 32;
-    UI_OFFSET_X = 32 * 15;
-    UI_OFFSET_Y = 16;
+    UI_OFFSET_X = 16 * 29;
+    UI_OFFSET_Y = 32;
 
 global
 
@@ -115,7 +115,7 @@ begin
     made_with_div2_intro();
     load_resources();
     config_game();
-    // screen_mockap();
+    screen_mockap();
     play_game();
 
     return;
@@ -282,7 +282,10 @@ private
        int program_entries = 10;
     end
 
+    int mockap_screen;
+
 begin
+    draw_z = 1024;
     draw(3, 32, 15, 0, 0, 0, 640, 480);
 
     // Puzzle area:
@@ -321,6 +324,12 @@ begin
                          flag);
         flag = !flag;
     end
+
+    // Capture screen and store in an static map:
+    mockap_screen = new_map(640, 480, 0, 0, 160);
+    screen_copy(0, 0, mockap_screen, 0, 0, 640, 480);
+    delete_draw(all_drawing);
+    put_screen(0, mockap_screen);
 end
 
 function draw_program_row(int x ,int y, int flag)
@@ -586,6 +595,8 @@ begin
         ui_available_block(x);
     end
 
+    ui_time_progressbar();
+
     frame;
 
     priority++;
@@ -706,5 +717,26 @@ begin
 
     loop
         frame;
+    end
+end
+
+process ui_time_progressbar()
+private
+    int full_width = TILE_SIZE * 4;
+    int total;
+
+begin
+    x = UI_OFFSET_X + TILE_SIZE * 2;
+    y = UI_OFFSET_Y + TILE_SIZE * 13;
+    graph = BLOCK_EMPTY;
+    file = file_ui;
+    size = 400;
+    region = 4;
+
+    total = g_level_data.time;
+    loop
+       define_region(4, UI_OFFSET_X, y - TILE_SIZE / 2,
+                        full_width * (total - clamp(timer[1], 0, total)) / total, TILE_SIZE / 2);
+       frame;
     end
 end
