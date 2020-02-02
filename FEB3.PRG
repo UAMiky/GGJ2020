@@ -969,7 +969,7 @@ private
 begin
     x = UI_OFFSET_X + TILE_SIZE * 2;
     y = UI_OFFSET_Y + TILE_SIZE * 13;
-    graph = BLOCK_EMPTY;
+    graph = 200;
     file = file_ui;
     size = 400;
     region = 4;
