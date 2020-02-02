@@ -486,7 +486,7 @@ begin
     end
 
     frame(player_animation_delay(graph) *
-          (SMOKE_LAST_FRAME - SMOKE_FIRST_FRAME));
+          (SMOKE_LAST_FRAME - SMOKE_FIRST_FRAME + 1));
 end
 
 process extinguisher_smoke(id_player)
@@ -501,13 +501,12 @@ begin
         case 3: angle = -90; x += TILE_SIZE; end
     end
 
-    // TODO: File
+    file = file_foam;
     graph = SMOKE_FIRST_FRAME;
-
-    while (graph < SMOKE_LAST_FRAME)
-        graph++;
+    repeat
         frame(player_animation_delay(graph));
-    end
+        graph++;
+    until (graph > SMOKE_LAST_FRAME)
 end
 
 /////////////////
