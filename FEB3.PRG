@@ -1,5 +1,5 @@
 /*
- * FEB 3 2020
+ * JAMMED MONDAY
  *
  * Copyright 2020 Hammer Technologies GGJ Team
  *
@@ -124,6 +124,10 @@ global
           86, 99, 0, // wrench down
           75, 85, 0, // wrench right
           1,  1,  0; // sleep
+
+    int g_scene_tile_anims[5] =
+        1, 2, 3,   // Burning motor
+        4, 5, 6;   // Leaking pipe
 
     int player_rot;
 
@@ -822,6 +826,7 @@ process ui_block(row, column, graph)
 begin
     x = (column * TILE_SIZE) + UI_OFFSET_X + (TILE_SIZE / 2);
     y = (row * TILE_SIZE) + UI_OFFSET_Y + (TILE_SIZE / 2);
+    z = column;
     file = file_ui;
 
     if (graph == 0) graph = BLOCK_EMPTY; end
