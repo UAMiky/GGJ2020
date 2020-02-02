@@ -96,20 +96,27 @@ global
         end
     end
 
-    struct g_player_anims[4]
+    struct g_player_anims[16]
         int first;
         int last;
         int flags;
-    end =
-        // walk up
-        1, 4, 0,
-        // walk left
-        5, 8, 1,
-        // walk down
-        9, 12, 0,
-        // walk right
-        5, 8, 0,
-        ;
+    end = 1,  4,  0, // walk up
+          5,  8,  1, // walk left
+          9,  12, 0, // walk down
+          5,  8,  0, // walk right
+          13, 20, 0, // ext. up
+          21, 28, 0, // ext. right
+          21, 28, 1, // ext. left
+          29, 36, 0, // ext. down
+          37, 44, 0, // torch up
+          45, 52, 0, // torch right
+          45, 52, 1, // torch left
+          53, 62, 0, // torch down
+          63, 74, 0, // wrench up
+          75, 85, 0, // wrench right
+          75, 85, 1, // wrench left
+          86, 99, 0, // wrench down
+          1,  1,  0; // sleep
 
     int player_rot;
 
