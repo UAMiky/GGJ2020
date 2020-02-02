@@ -51,7 +51,7 @@ const
     SELECT_ICON             = 100;
 
     SMOKE_FIRST_FRAME       = 1;
-    SMOKE_LAST_FRAME        = 3;
+    SMOKE_LAST_FRAME        = 5;
 
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
@@ -128,13 +128,16 @@ global
 
     // Resources
     int file_ui;
+    int file_player;
+    int file_foam;
+
+    int game_background;
 
 //// LOCAL
 
 /////////////////
 //// MAIN PROGRAM
 /////////////////
-
 private
     int option;
 
@@ -142,7 +145,7 @@ begin
     made_with_div2_intro();
     load_resources();
     config_game();
-    screen_mockap();
+    //screen_mockap();
     play_game();
 
     return;
@@ -170,7 +173,7 @@ private
     int pos;
 
 begin
-    start_fli("help\help.fli", 0, 0);
+    start_fli("HELP\HELP.FLI", 0, 0);
 
     repeat
         pos = frame_fli();
@@ -187,14 +190,14 @@ end
 /////////////////
 function load_resources()
 begin
-    load_fpg("PROJECTS\FEB3\PLAYER.FPG");
-    file_ui = load_fpg("PROJECTS\FEB3\UI_BLOCK.FPG");
+    file_ui         =   load_fpg("PROJECTS\FEB3\UI_BLOCK.FPG");
+    file_player     =   load_fpg("PROJECTS\FEB3\PLAYER.FPG");
+    file_foam       =   load_fpg("PROJECTS\FEB3\FOAMEXTG.FPG");
+
+    game_background = load_pcx("PROJECTS\FEB3\BGND.PCX");
 end
 
 function config_game()
-private
-    map;
-
 begin
     load_pal("DIV2.PAL");
     set_mode(m640x480);
@@ -209,7 +212,6 @@ end
 /////////////////
 //// MAIN MENU
 /////////////////
-
 function main_menu()
 begin
     // draw_main_menu();
@@ -240,7 +242,6 @@ end
 /////////////////
 //// CREDITS
 /////////////////
-
 function credits()
 begin
 
@@ -253,18 +254,8 @@ function clamp(value, min, max)
 begin
     if (value < min) return (min); end
     if (value > max) return (max); end
+
     return (value);
-end
-
-function clamp_anim(id_process, min_graph, max_graph)
-begin
-    if (id_process.graph > max_graph)
-        id_process.graph = min_graph;
-    end
-
-    if (id_process.graph < min_graph)
-        id_process.graph = max_graph;
-    end
 end
 
 function lerp(a, b, t)
@@ -272,7 +263,7 @@ begin
     return ((a * t + b * (100 - t)) / 100);
 end
 
-process simple_sprite(x,y,z,file,graph)
+process simple_sprite(x, y, z, file, graph)
 begin
     loop
         frame;
@@ -383,11 +374,11 @@ end
 /////////////////
 //// PLAYER
 /////////////////
-
 process player()
 begin
     x = g_level_data.start.tile_x * TILE_SIZE + TILE_SIZE;
     y = (g_level_data.start.tile_y + 1) * TILE_SIZE + TILE_SIZE;
+    file = file_player;
     player_rot = g_level_data.start.rot;
 
     while (waiting_for_exec() != 0)
@@ -397,7 +388,7 @@ begin
 
     program_executor(id);
 
-    while(is_program_running() != 0)
+    while (is_program_running() != 0)
         player_anim(id, g_current_program.current_block);
         frame(player_animation_delay(graph));
     end
@@ -462,6 +453,7 @@ begin
     while ( (id_player.x != dest_x) || (id_player.y != dest_y) )
         id_player.x += move_x;
         id_player.y += move_y;
+
         frame(500);
     end
 end
@@ -480,6 +472,7 @@ function use_tool(id_player, block)
 begin
     x = (id_player.x - TILE_SIZE) / TILE_SIZE;
     y = (id_player.y - 2 * TILE_SIZE) / TILE_SIZE;
+
     for (z = 0; z < 3; z++)
         if ( (g_level_data.goals[z].tool == block) &&
              (g_level_data.goals[z].tile_x == x) &&
@@ -493,7 +486,7 @@ begin
     end
 
     frame(player_animation_delay(graph) *
-        (SMOKE_LAST_FRAME - SMOKE_FIRST_FRAME));
+          (SMOKE_LAST_FRAME - SMOKE_FIRST_FRAME));
 end
 
 process extinguisher_smoke(id_player)
@@ -510,7 +503,8 @@ begin
 
     // TODO: File
     graph = SMOKE_FIRST_FRAME;
-    while(graph < SMOKE_LAST_FRAME)
+
+    while (graph < SMOKE_LAST_FRAME)
         graph++;
         frame(player_animation_delay(graph));
     end
@@ -519,7 +513,6 @@ end
 /////////////////
 //// PROGRAM EXECUTION
 /////////////////
-
 process program_executor(id_player)
 private
     byte idx;
@@ -541,15 +534,18 @@ begin
            g_current_program.current_repeat.start_index = idx;
            g_current_program.current_repeat.count = block - BLOCK_REPEAT_0;
            block = set_current_block(idx);
+
            continue;
         end
 
         // Check if current loop should repeat
         if ( (g_current_program.current_repeat.count > 0) &&
              (g_current_program.instructions[idx].indent == 0) )
+
             g_current_program.current_repeat.count--;
             idx = g_current_program.current_repeat.start_index;
             block = set_current_block(idx);
+
             continue;
         end
 
@@ -563,7 +559,7 @@ begin
             case BLOCK_TOOL_EXTINGUISHER,
                  BLOCK_TOOL_TORCH,
                  BLOCK_TOOL_WRENCH:
-                use_tool(id_player, block);
+                 use_tool(id_player, block);
             end
         end
 
@@ -578,10 +574,13 @@ private
 
 begin
     block = BLOCK_END;
+
     if (idx < MAX_PROGRAM_BLOCKS)
         block = g_current_program.instructions[idx].block;
     end
+
     g_current_program.current_block = block;
+
     return (block);
 end
 
@@ -598,7 +597,6 @@ end
 /////////////////
 //// GAME LOGIC
 /////////////////
-
 process play_game()
 private
     int f;
@@ -629,10 +627,13 @@ function play_level()
 private
     int id_ui;
     int id_player;
+
 begin
     timer[1] = 0;
     id_player = player();
     id_ui = ui_control();
+
+    put_screen(0, game_background);
 
     while (is_program_running() != 0)
         frame;
@@ -662,7 +663,6 @@ end
 /////////////////
 //// UI LOGIC
 /////////////////
-
 process ui_control()
 private
     int tmp, id_col, mouse_down = false;
@@ -675,7 +675,7 @@ begin
     graph = MOUSE_ICON;
     z = -256;
 
-    id_selector = simple_sprite(0,0,-100,file,0);
+    id_selector = simple_sprite(0, 0, -100, file, 0);
 
     // spawn program blocks
     for (x = 0; x < MAX_PROGRAM_BLOCKS; x++)
@@ -755,6 +755,7 @@ begin
     x = (column * TILE_SIZE) + UI_OFFSET_X + (TILE_SIZE / 2);
     y = (row * TILE_SIZE) + UI_OFFSET_Y + (TILE_SIZE / 2);
     file = file_ui;
+
     if (graph == 0) graph = BLOCK_EMPTY; end
     if (column == 3) region = 3; else region = 2; end
 
@@ -777,7 +778,7 @@ begin
         id1 = ui_block(idx, 1, g_current_program.instructions[idx].block);
     end
 
-    while(waiting_for_exec())
+    while (waiting_for_exec())
         frame;
 
         if(id1.graph == BLOCK_EMPTY)
@@ -801,9 +802,8 @@ private
 begin
     id3 = ui_block(idx, 3, g_level_data.blocks[idx]);
 
-    while(waiting_for_exec())
+    while (waiting_for_exec())
         frame;
-
         g_level_data.blocks[idx] = id3.graph;
     end
 
@@ -826,6 +826,7 @@ begin
     region = 4;
 
     total = g_level_data.time;
+
     loop
        define_region(4, UI_OFFSET_X, y - TILE_SIZE / 2,
                         full_width * (total - clamp(timer[1], 0, total)) / total, TILE_SIZE / 2);
