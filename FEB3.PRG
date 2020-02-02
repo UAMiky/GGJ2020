@@ -47,6 +47,8 @@ const
     BLOCK_REPEAT_8          = 28;  // Repeat x8
     BLOCK_REPEAT_9          = 29;  // Repeat x9
 
+    BLOCK_EXECUTION_OFFSET  = 30;
+
     MOUSE_ICON              = 99;
     SELECT_ICON             = 100;
 
@@ -69,6 +71,7 @@ global
     // Program execution context
     struct g_current_program
         // Current block being executed
+        int current_index = 0;
         byte current_block = 30;
 
         // If there is an ongoing repeat
@@ -685,6 +688,19 @@ begin
     signal(id_ui, s_kill_tree);
 end
 
+function load_scenario()
+private byte tile;
+begin
+    for (x = 0; x < 13; x++)
+        for (y = 0; y < 13; y++)
+            tile = g_level_data.tiles[x,y];
+            if (tile != 0)
+                scene_tile(tile);
+            end
+        end
+    end
+end
+
 function level_complete()
 begin
 end
@@ -795,6 +811,7 @@ begin
 
     id_selector.graph = 0;
     id_selected = 0;
+    graph = 0;
 
     loop
         frame;
@@ -817,7 +834,7 @@ end
 
 process ui_program_block(idx)
 private
-    id0, id1;
+    id0, id1, my_graph;
 
 begin
 
@@ -841,7 +858,19 @@ begin
         end
     end
 
+    if (g_level_data.instructions[idx].indent == 1)
+        id0 = id1;
+    end
+
+    my_graph = id0.graph;
+
     loop
+        if (g_current_program.current_index == idx)
+            id0.graph = my_graph; // + BLOCK_EXECUTION_OFFSET;
+        else
+            id0.graph = my_graph;
+        end
+
         frame;
     end
 end
