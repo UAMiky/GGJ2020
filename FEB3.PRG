@@ -625,6 +625,7 @@ begin
     end
 
     g_current_program.current_block = block;
+    g_current_program.current_index = idx;
 
     return (block);
 end
@@ -934,7 +935,7 @@ begin
 
     loop
         if (g_current_program.current_index == idx)
-            id0.graph = my_graph; // + BLOCK_EXECUTION_OFFSET;
+            id0.graph = my_graph + BLOCK_EXECUTION_OFFSET;
         else
             id0.graph = my_graph;
         end
