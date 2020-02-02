@@ -55,7 +55,7 @@ const
     SMOKE_FIRST_FRAME       = 1;
     SMOKE_LAST_FRAME        = 5;
 
-    MOVE_SPEED              = 2;
+    MOVE_SPEED              = 4;
 
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
