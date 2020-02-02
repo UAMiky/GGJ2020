@@ -706,7 +706,13 @@ begin
 end
 
 function level_complete()
+private
+    int id_text;
 begin
+    //
+    id_text = write(0, 320, 240, 4, "LEVEL COMPLETE");
+    frame(fps * 300);
+    delete_text(id_text);
 end
 
 function level_failed(f)
