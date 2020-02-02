@@ -738,10 +738,14 @@ function level_complete()
 private
     int id_text;
 begin
+    file = file_ui;
+    graph = 201;
+    x = 320; y = 240;
+
     //
-    id_text = write(0, 320, 240, 4, "LEVEL COMPLETE");
+    //id_text = write(0, 320, 240, 4, "LEVEL COMPLETE");
     frame(fps * 300);
-    delete_text(id_text);
+    //delete_text(id_text);
 end
 
 function level_failed(level, f)
@@ -749,7 +753,10 @@ private
     int id_text;
 begin
     //
-    id_text = write(0, 320, 240, 4, "LEVEL FAILED");
+    file = file_ui;
+    graph = 202;
+    x = 320; y = 240;
+    // id_text = write(0, 320, 240, 4, "LEVEL FAILED");
 
     if(level == 1)
         g_tutorial = true;
@@ -757,7 +764,7 @@ begin
 
     frame(fps * 500);
     g_tutorial = false;
-    delete_text(id_text);
+    // delete_text(id_text);
 
 
     // Rewind current level data
