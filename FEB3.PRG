@@ -216,6 +216,8 @@ begin
     set_mode(m640x480);
     vsync = 1;
 
+    song(load_song("MOD\TECNO1.XM", 1));
+
     define_region(2, UI_OFFSET_X, UI_OFFSET_Y,
                   TILE_SIZE * 2, TILE_SIZE * MAX_PROGRAM_BLOCKS);
     define_region(3, UI_OFFSET_X + 3 * TILE_SIZE, UI_OFFSET_Y,
