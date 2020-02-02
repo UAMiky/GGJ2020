@@ -53,6 +53,8 @@ const
     SMOKE_FIRST_FRAME       = 1;
     SMOKE_LAST_FRAME        = 5;
 
+    MOVE_SPEED              = 2;
+
     // Resource limits
     MAX_PROGRAM_BLOCKS = 10;
     MAX_AVAILABLE_BLOCKS = 12;
@@ -444,10 +446,10 @@ begin
     move_y = 0;
 
     switch(player_rot)
-        case 0: dest_y -= direction * TILE_SIZE; move_y = -direction; end
-        case 1: dest_x -= direction * TILE_SIZE; move_x = -direction; end
-        case 2: dest_y += direction * TILE_SIZE; move_y = +direction; end
-        case 3: dest_x += direction * TILE_SIZE; move_x = +direction; end
+        case 0: dest_y -= direction * TILE_SIZE; move_y = -direction * MOVE_SPEED; end
+        case 1: dest_x -= direction * TILE_SIZE; move_x = -direction * MOVE_SPEED; end
+        case 2: dest_y += direction * TILE_SIZE; move_y = +direction * MOVE_SPEED; end
+        case 3: dest_x += direction * TILE_SIZE; move_x = +direction * MOVE_SPEED; end
     end
 
     while ( (id_player.x != dest_x) || (id_player.y != dest_y) )
