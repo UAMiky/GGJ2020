@@ -1,8 +1,8 @@
-# Feb 3 2020
+# Jammed Monday
 
 Juego realizado durante la Global Game Jam 2020
 
 ### Equipo
-José Miguel Sánchez 
-Miguel Company
-Diego Sebastián
+* José Miguel Sánchez (programación)
+* Miguel Company (game design y programación)
+* Diego Sebastián (arte)
