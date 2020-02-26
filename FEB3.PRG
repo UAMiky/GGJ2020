@@ -66,6 +66,8 @@ const
     UI_OFFSET_X = 16 * 29;
     UI_OFFSET_Y = 32;
 
+    NUM_LEVELS = 1;
+
 global
 
     g_tutorial = false;
@@ -84,7 +86,7 @@ global
     end
 
     // Level config
-    struct g_level_data
+    struct g_level_data[NUM_LEVELS]
         int time = 1000;      // Time before program is started
         byte tiles[12,12];    // Tiles on scenario
         byte blocks[11];      // Available blocks
@@ -103,7 +105,28 @@ global
             byte tile_y;
             byte tool = 0;
         end
-    end
+    end =
+
+    // -------------------------- LEVEL 1 --------------------------
+    // Time before program is started
+    1000,
+    // Tiles on scenario (13 x 13)
+    11 DUP (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  // 11 empty rows
+            0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,   // Tile 1 in the middle of row
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   // Empty row
+    // Available blocks (12)
+    BLOCK_TOOL_EXTINGUISHER, 11 DUP (0),
+    // Program content (10 x block, indent)
+           BLOCK_MOVE_FORWARD, 0,
+    9 DUP (BLOCK_EMPTY,        0),
+    // Player starting pos (col, row, rot)
+    6, 12, 0,
+    // Level goals (4 x col, row, tool)
+           6, 11, BLOCK_TOOL_EXTINGUISHER,
+    3 DUP (0,  0, 0),
+
+    // -------------------------- DATA END --------------------------
+    -1;
 
     struct g_player_anims[16]
         int first;
@@ -397,11 +420,11 @@ end
 /////////////////
 process player()
 begin
-    x = g_level_data.start.tile_x * TILE_SIZE + TILE_SIZE;
-    y = (g_level_data.start.tile_y + 1) * TILE_SIZE + TILE_SIZE;
+    x = g_level_data[NUM_LEVELS].start.tile_x * TILE_SIZE + TILE_SIZE;
+    y = (g_level_data[NUM_LEVELS].start.tile_y + 1) * TILE_SIZE + TILE_SIZE;
     z = -100;
     file = file_player;
-    player_rot = g_level_data.start.rot;
+    player_rot = g_level_data[NUM_LEVELS].start.rot;
 
     while (waiting_for_exec() != 0)
         player_anim(id, BLOCK_SLEEP_MODE);
@@ -509,10 +532,10 @@ begin
     end
 
     for (z = 0; z < 3; z++)
-        if ( (g_level_data.goals[z].tool == block) &&
-             (g_level_data.goals[z].tile_x == x) &&
-             (g_level_data.goals[z].tile_y == y) )
-            g_level_data.goals[z].tool = 0;
+        if ( (g_level_data[NUM_LEVELS].goals[z].tool == block) &&
+             (g_level_data[NUM_LEVELS].goals[z].tile_x == x) &&
+             (g_level_data[NUM_LEVELS].goals[z].tile_y == y) )
+            g_level_data[NUM_LEVELS].goals[z].tool = 0;
             change_anim = true;
         end
     end
@@ -577,7 +600,7 @@ begin
     while (block != BLOCK_END)
         // Check if current loop should repeat
         if ( (g_current_program.current_repeat.count > 1) &&
-             (g_level_data.instructions[idx].indent == 0) )
+             (g_level_data[NUM_LEVELS].instructions[idx].indent == 0) )
 
             g_current_program.current_repeat.count--;
             idx = g_current_program.current_repeat.start_index;
@@ -623,7 +646,7 @@ begin
     block = BLOCK_END;
 
     if (idx < MAX_PROGRAM_BLOCKS)
-        block = g_level_data.instructions[idx].block;
+        block = g_level_data[NUM_LEVELS].instructions[idx].block;
     end
 
     g_current_program.current_block = block;
@@ -639,7 +662,7 @@ end
 
 function waiting_for_exec()
 begin
-    return (timer[1] < g_level_data.time);
+    return (timer[1] < g_level_data[NUM_LEVELS].time);
 end
 
 /////////////////
@@ -647,44 +670,53 @@ end
 /////////////////
 process play_game()
 private
-    int f;
     int level;
 
 begin
     create_game_background();
 
-    f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r");
-    if (f == 0)
-        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "w");
-        from level = 1 to 10;
-            fwrite(offset g_level_data, sizeof(g_level_data), f);
-            fwrite(offset g_current_program, sizeof(g_current_program), f);
-        end
-        fclose(f);
-
-        f = fopen("PROJECTS\FEB3\LEVELS.DAT", "r");
-    end
-
-    level = 1;
-    while (level <= 10)
-        load_level(f);
-        if(play_level(level, f))
+    level = 0;
+    while (level < NUM_LEVELS)
+        load_level(level);
+        if(play_level(level))
             level++;
         end
     end
-
-    fclose(f);
 end
 
-function load_level(f)
+function load_level(level)
 begin
-    fread(offset g_level_data, sizeof(g_level_data), f);
-    fread(offset g_current_program, sizeof(g_current_program), f);
+    g_level_data[NUM_LEVELS].time = g_level_data[level].time;
+    for (x=0; x<=12; x++)
+        for (y=0; y<=12; y++)
+            g_level_data[NUM_LEVELS].tiles[x,y] = g_level_data[level].tiles[x,y];
+        end
+    end
+    for (x=0; x<=11; x++)
+        g_level_data[NUM_LEVELS].blocks[x] = g_level_data[level].blocks[x];
+    end
+    for (x=0; x<=9; x++)
+        g_level_data[NUM_LEVELS].instructions[x].block = g_level_data[level].instructions[x].block;
+        g_level_data[NUM_LEVELS].instructions[x].indent = g_level_data[level].instructions[x].indent;
+    end
+    g_level_data[NUM_LEVELS].start.tile_x = g_level_data[level].start.tile_x;
+    g_level_data[NUM_LEVELS].start.tile_y = g_level_data[level].start.tile_y;
+    g_level_data[NUM_LEVELS].start.rot = g_level_data[level].start.rot;
+    for (x=0; x<=3; x++)
+        g_level_data[NUM_LEVELS].goals[x].tile_x = g_level_data[level].goals[x].tile_x;
+        g_level_data[NUM_LEVELS].goals[x].tile_y = g_level_data[level].goals[x].tile_y;
+        g_level_data[NUM_LEVELS].goals[x].tool = g_level_data[level].goals[x].tool;
+    end
+
+    g_current_program.current_index = 0;
+    g_current_program.current_block = BLOCK_EMPTY;
+    g_current_program.current_repeat.start_index = 0;
+    g_current_program.current_repeat.count = 0;
 
     load_scenario();
 end
 
-function play_level(level, f)
+function play_level(level)
 private
     int winner = true;
     int id_ui;
@@ -701,7 +733,7 @@ begin
 
     // check win condition
     for (x = 0; winner && x < 4; x++)
-        if (g_level_data.goals[x].tool != 0)
+        if (g_level_data[NUM_LEVELS].goals[x].tool != 0)
             winner = false;
         end
     end
@@ -709,7 +741,7 @@ begin
     if (winner)
         level_complete();
     else
-        level_failed(level, f);
+        level_failed(level);
     end
 
     signal(type scene_tile, s_kill);
@@ -724,7 +756,7 @@ private byte tile;
 begin
     for (x = 0; x < 13; x++)
         for (y = 0; y < 13; y++)
-            tile = g_level_data.tiles[x,y];
+            tile = g_level_data[NUM_LEVELS].tiles[x,y];
             g_scene_tiles[x, y] = 0;
 
             if (tile != 0)
@@ -748,7 +780,7 @@ begin
     //delete_text(id_text);
 end
 
-function level_failed(level, f)
+function level_failed(level)
 private
     int id_text;
 begin
@@ -758,18 +790,13 @@ begin
     x = 320; y = 240;
     // id_text = write(0, 320, 240, 4, "LEVEL FAILED");
 
-    if(level == 1)
+    if(level == 0)
         g_tutorial = true;
     end
 
     frame(fps * 500);
     g_tutorial = false;
     // delete_text(id_text);
-
-
-    // Rewind current level data
-    fseek(f, -sizeof(g_level_data), seek_cur);
-    fseek(f, -sizeof(g_current_program), seek_cur);
 end
 
 process scene_tile(kind, x, y)
@@ -939,27 +966,27 @@ private
 
 begin
 
-    if (g_level_data.instructions[idx].indent == 0)
-        id0 = ui_block(idx, 0, g_level_data.instructions[idx].block);
+    if (g_level_data[NUM_LEVELS].instructions[idx].indent == 0)
+        id0 = ui_block(idx, 0, g_level_data[NUM_LEVELS].instructions[idx].block);
         id1 = ui_block(idx, 1, BLOCK_EMPTY);
     else
         id0 = ui_block(idx, 0, BLOCK_EMPTY);
-        id1 = ui_block(idx, 1, g_level_data.instructions[idx].block);
+        id1 = ui_block(idx, 1, g_level_data[NUM_LEVELS].instructions[idx].block);
     end
 
     while (waiting_for_exec())
         frame;
 
         if(id1.graph == BLOCK_EMPTY)
-            g_level_data.instructions[idx].indent = 0;
-            g_level_data.instructions[idx].block = id0.graph;
+            g_level_data[NUM_LEVELS].instructions[idx].indent = 0;
+            g_level_data[NUM_LEVELS].instructions[idx].block = id0.graph;
         else
-            g_level_data.instructions[idx].indent = 1;
-            g_level_data.instructions[idx].block = id1.graph;
+            g_level_data[NUM_LEVELS].instructions[idx].indent = 1;
+            g_level_data[NUM_LEVELS].instructions[idx].block = id1.graph;
         end
     end
 
-    if (g_level_data.instructions[idx].indent == 1)
+    if (g_level_data[NUM_LEVELS].instructions[idx].indent == 1)
         id0 = id1;
     end
 
@@ -981,11 +1008,11 @@ private
     id3;
 
 begin
-    id3 = ui_block(idx, 3, g_level_data.blocks[idx]);
+    id3 = ui_block(idx, 3, g_level_data[NUM_LEVELS].blocks[idx]);
 
     while (waiting_for_exec())
         frame;
-        g_level_data.blocks[idx] = id3.graph;
+        g_level_data[NUM_LEVELS].blocks[idx] = id3.graph;
     end
 
     loop
@@ -1006,7 +1033,7 @@ begin
     size = 400;
     region = 4;
 
-    total = g_level_data.time;
+    total = g_level_data[NUM_LEVELS].time;
 
     loop
        define_region(4, UI_OFFSET_X, y - TILE_SIZE / 2,
