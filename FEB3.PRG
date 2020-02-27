@@ -1051,7 +1051,8 @@ begin
     my_graph = id0.graph;
 
     loop
-        if (g_current_program.current_index == idx)
+        if (g_current_program.current_index == idx
+            /* or g_current_program.current_repeat.start_index == idx + 1 */)
             id0.graph = my_graph + BLOCK_EXECUTION_OFFSET;
         else
             id0.graph = my_graph;
