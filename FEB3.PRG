@@ -66,7 +66,7 @@ const
     UI_OFFSET_X = 16 * 29;
     UI_OFFSET_Y = 32;
 
-    NUM_LEVELS = 2;
+    NUM_LEVELS = 3;
 
     // This is used when debugging new levels, to start the game on
     // a level different than 0. Restore to 0 on the final version
@@ -130,6 +130,27 @@ global
     3 DUP (0,  0, 0),
 
     // -------------------------- LEVEL 2 --------------------------
+    // Time before program is started
+    1000,
+    // Tiles on scenario (13 x 13)
+    11 DUP (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  // 11 empty rows
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,   // Tile 1 at the end of the row
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   // Empty row
+    // Available blocks (12)
+    BLOCK_REPEAT_7, 11 DUP (0),
+    // Program content (10 x block, indent)
+           BLOCK_TURN_RIGHT,        0,
+           BLOCK_REPEAT_2,          0,
+           BLOCK_MOVE_FORWARD,      1,
+           BLOCK_TOOL_EXTINGUISHER, 0,
+    6 DUP (BLOCK_EMPTY,             0),
+    // Player starting pos (col, row, rot)
+    4, 11, 0,
+    // Level goals (4 x col, row, tool)
+           12, 11, BLOCK_TOOL_EXTINGUISHER,
+    3 DUP ( 0,  0, 0),
+
+    // -------------------------- LEVEL 3 --------------------------
     // Time before program is started
     10000,
     // Tiles on scenario (13 x 13)
