@@ -66,7 +66,7 @@ const
     UI_OFFSET_X = 16 * 29;
     UI_OFFSET_Y = 32;
 
-    NUM_LEVELS = 1;
+    NUM_LEVELS = 2;
 
 global
 
@@ -124,6 +124,33 @@ global
     // Level goals (4 x col, row, tool)
            6, 11, BLOCK_TOOL_EXTINGUISHER,
     3 DUP (0,  0, 0),
+
+    // -------------------------- LEVEL 2 --------------------------
+    // Time before program is started
+    10000,
+    // Tiles on scenario (13 x 13)
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   // Tile 1 in the upper left corner
+    11 DUP (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),  // 12 empty rows
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,   // Empty row
+    // Available blocks (12)
+    (BLOCK_TOOL_EXTINGUISHER, BLOCK_TOOL_TORCH, BLOCK_TOOL_WRENCH,
+    BLOCK_MOVE_FORWARD, BLOCK_MOVE_BACKWARDS, BLOCK_TURN_LEFT, BLOCK_TURN_RIGHT,
+    BLOCK_REPEAT_2, BLOCK_REPEAT_4, BLOCK_REPEAT_5, BLOCK_REPEAT_7, BLOCK_REPEAT_9),
+    // Program content (10 x block, indent)
+           BLOCK_REPEAT_2,          0,
+           BLOCK_MOVE_FORWARD,      1,
+           BLOCK_TURN_LEFT,         1,
+           BLOCK_MOVE_FORWARD,      1,
+           BLOCK_TURN_RIGHT,        1,
+           BLOCK_REPEAT_9,          0,
+           BLOCK_MOVE_FORWARD,      1,
+           BLOCK_TOOL_EXTINGUISHER, 0,
+    2 DUP (BLOCK_EMPTY,             0),
+    // Player starting pos (col, row, rot)
+    12, 10, 0,
+    // Level goals (4 x col, row, tool)
+           0, 0, BLOCK_TOOL_EXTINGUISHER,
+    3 DUP (0, 0, 0),
 
     // -------------------------- DATA END --------------------------
     -1;
