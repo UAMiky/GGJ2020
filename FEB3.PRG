@@ -68,6 +68,10 @@ const
 
     NUM_LEVELS = 2;
 
+    // This is used when debugging new levels, to start the game on
+    // a level different than 0. Restore to 0 on the final version
+    INITIAL_LEVEL = 1;
+
 global
 
     g_tutorial = false;
@@ -212,7 +216,9 @@ private
     int option;
 
 begin
-    made_with_div2_intro();
+    if (INITIAL_LEVEL == 0)
+        made_with_div2_intro();
+    end
     load_resources();
     config_game();
     //screen_mockap();
@@ -702,7 +708,7 @@ private
 begin
     create_game_background();
 
-    level = 0;
+    level = INITIAL_LEVEL;
     while (level < NUM_LEVELS)
         load_level(level);
         if(play_level(level))
