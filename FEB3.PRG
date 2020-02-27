@@ -652,15 +652,19 @@ begin
     block = set_current_block(0);
 
     while (block != BLOCK_END)
-        // Check if current loop should repeat
-        if ( (g_current_program.current_repeat.count > 1) &&
-             (g_level_data[NUM_LEVELS].instructions[idx].indent == 0) )
+        // Check if current loop ends
+        if (g_level_data[NUM_LEVELS].instructions[idx].indent == 0)
+            // Check if current loop should repeat
+            if (g_current_program.current_repeat.count > 1)
 
-            g_current_program.current_repeat.count--;
-            idx = g_current_program.current_repeat.start_index;
-            block = set_current_block(idx);
+                g_current_program.current_repeat.count--;
+                idx = g_current_program.current_repeat.start_index;
+                block = set_current_block(idx);
 
-            continue;
+                continue;
+            else
+                g_current_program.current_repeat.start_index = 0;
+            end
         end
 
         // Check if a loop should start
